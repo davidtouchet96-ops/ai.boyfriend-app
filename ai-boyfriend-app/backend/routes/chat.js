@@ -5,8 +5,9 @@ import { authMiddleware } from '../middleware/auth.js';
 
 const router = express.Router();
 
-const AI_BASE_URL = (process.env.AI_BASE_URL || 'https://api.openai.com/v1').replace(/\/$/, '');
-const AI_MODEL = process.env.AI_MODEL || 'gpt-4o-mini';
+// Venice is OpenAI-compatible, so the app can use the standard chat-completions format.
+const AI_BASE_URL = (process.env.AI_BASE_URL || 'https://api.venice.ai/api/v1').replace(/\/$/, '');
+const AI_MODEL = process.env.AI_MODEL || 'zai-org-glm-5';
 
 async function generateAIReply({ character, history }) {
   if (!process.env.AI_API_KEY) {
@@ -18,7 +19,7 @@ async function generateAIReply({ character, history }) {
   const messages = [
     {
       role: 'system',
-      content: `${personality}\n\nStay in character as ${character.name}. Respond naturally to the user's latest message. Do not repeat the user's message back verbatim. Keep the conversation engaging and conversational.`
+      content: `${personality}\n\nStay in character as ${character.name}. Respond naturally to the user's latest message. Do not repeat the user's message back verbatim. Keep the conversation engaging and conversational. Remember relevant details from the conversation history when responding.`
     },
     ...history.map((message) => ({
       role: message.role === 'assistant' ? 'assistant' : 'user',
