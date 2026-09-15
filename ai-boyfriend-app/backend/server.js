@@ -16,9 +16,11 @@ const app = express();
 const httpServer = createServer(app);
 
 const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:5173',
+  process.env.FRONTEND_URL || 'https://ai-boyfriend-app-2.onrender.com',
+  'https://ai-boyfriend-app-2.onrender.com',
+  'http://localhost:5173',
   'http://localhost:3000'
-];
+].filter(Boolean);
 
 app.use(cors({
   origin: allowedOrigins,
@@ -46,7 +48,6 @@ const seedTestUser = async () => {
   let user = await User.findOne({ email });
 
   if (user) {
-    // Keep the configured personal test account synchronized with Render settings.
     user.username = process.env.TEST_USER_USERNAME || user.username || 'demo';
     user.password = password;
     user.ageVerified = true;
@@ -88,7 +89,6 @@ io.on('connection', (socket) => {
   socket.on('send-message', (data) => io.to(data.userId).emit('new-message', data));
 });
 
-// Import routes
 import authRoutes from './routes/auth.js';
 import chatRoutes from './routes/chat.js';
 import characterRoutes from './routes/character.js';
