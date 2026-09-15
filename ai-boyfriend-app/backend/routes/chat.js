@@ -114,6 +114,7 @@ router.get('/history/:characterId', authMiddleware, async (req, res) => {
 
     res.json(messages);
   } catch (error) {
+    console.error('Chat history error:', error.message);
     res.status(500).json({ error: 'Failed to fetch history' });
   }
 });
