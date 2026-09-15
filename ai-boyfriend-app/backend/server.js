@@ -7,6 +7,7 @@ import rateLimit from 'express-rate-limit';
 import mongoose from 'mongoose';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { User } from './models/User.js';
 
 dotenv.config();
 
@@ -31,10 +32,41 @@ app.use(express.json({ limit: '10mb' }));
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
 app.use(limiter);
 
+const seedTestUser = async () => {
+  if (process.env.SEED_TEST_USER !== 'true') return;
+
+  const email = process.env.TEST_USER_EMAIL || 'demo@example.com';
+  const password = process.env.TEST_USER_PASSWORD;
+
+  if (!password) {
+    console.warn('⚠️ SEED_TEST_USER is enabled but TEST_USER_PASSWORD is not set.');
+    return;
+  }
+
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    console.log(`ℹ️ Test user already exists: ${email}`);
+    return;
+  }
+
+  const testUser = new User({
+    username: process.env.TEST_USER_USERNAME || 'demo',
+    email,
+    password,
+    ageVerified: true,
+    subscription: { tier: 'vip' },
+    preferences: { contentIntensity: 5 }
+  });
+
+  await testUser.save();
+  console.log(`✅ Test user created: ${email}`);
+};
+
 const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGODB_URI);
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+    await seedTestUser();
   } catch (error) {
     console.error(`❌ MongoDB Error: ${error.message}`);
     setTimeout(connectDB, 5000);
