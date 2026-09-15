@@ -43,13 +43,21 @@ const seedTestUser = async () => {
     return;
   }
 
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
-    console.log(`ℹ️ Test user already exists: ${email}`);
+  let user = await User.findOne({ email });
+
+  if (user) {
+    // Keep the configured personal test account synchronized with Render settings.
+    user.username = process.env.TEST_USER_USERNAME || user.username || 'demo';
+    user.password = password;
+    user.ageVerified = true;
+    user.subscription = { ...user.subscription?.toObject?.(), tier: 'vip' };
+    user.preferences = { ...user.preferences?.toObject?.(), contentIntensity: 5 };
+    await user.save();
+    console.log(`✅ Test user synchronized: ${email}`);
     return;
   }
 
-  const testUser = new User({
+  user = new User({
     username: process.env.TEST_USER_USERNAME || 'demo',
     email,
     password,
@@ -58,7 +66,7 @@ const seedTestUser = async () => {
     preferences: { contentIntensity: 5 }
   });
 
-  await testUser.save();
+  await user.save();
   console.log(`✅ Test user created: ${email}`);
 };
 
